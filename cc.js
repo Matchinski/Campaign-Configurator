@@ -58,7 +58,25 @@ function adjustedArc(d) {
 
 const selectedItems = new Set();
 
-function clicked(event, p) {
+function clickedInfo(event, p) {
+    if (p.depth === 0) return;
+
+    const baseColor = color(p.ancestors().find(node => node.depth === 1).data.name);
+    const finalColor = getLighterShade(baseColor, p.depth - 1);
+
+    const infoBox = document.getElementById('info-box');
+    const infoTitle = document.getElementById('info-title');
+    const infoContent = document.getElementById('info-content');
+
+    infoTitle.textContent = p.data.name;
+    infoContent.textContent = `This is information about ${p.data.name}. It belongs to the ${p.parent.data.name} category.`;
+    
+    infoBox.style.display = 'block';
+    infoBox.style.backgroundColor = finalColor;
+    infoBox.style.color = p.depth > 2 ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT;
+}
+
+function clickedSelect(event, p) {
     if (p.depth === 0) return;
 
     const parent = p.parent;
@@ -168,7 +186,8 @@ chartGroup.selectAll("path")
     })
     .style("stroke", d => d.data.isFake ? "none" : NORMAL_BORDER_COLOR)
     .style("stroke-width", d => d.data.isFake ? 0 : BORDER_WIDTH)
-    .on("click", clicked)
+    .on("click", clickedInfo)
+    .on("dblclick", clickedSelect)
     .append("title")
     .text(d => d.data.isFake ? "" : `${d.ancestors().map(d => d.data.name).reverse().join("/")}\n${d.value}`);
 
@@ -186,19 +205,20 @@ const label = chartGroup.selectAll("text")
             const x = (mergedX0 + mergedX1) / 2 * 180 / Math.PI;
             const y = (d.y0 + d.y1) / 2;
             return `rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180})`;
-            } else {
-                const x = (x0 + x1) / 2 * 180 / Math.PI;
-                const y = (d.y0 + d.y1) / 2;
-                return `rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180})`;
-            }
-        })
-        .attr("dy", "0.35em")
-        .on("click", clicked)
-        .text(d => d.data.name)
-        .style("font-size", "10px")
-        .style("text-anchor", "middle")
-        .style("fill", d => d.depth > 2 ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT)
-        .attr("fill-opacity", 1);
+        } else {
+            const x = (x0 + x1) / 2 * 180 / Math.PI;
+            const y = (d.y0 + d.y1) / 2;
+            return `rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180})`;
+        }
+    })
+    .attr("dy", "0.35em")
+    .on("click", clickedInfo)
+    .on("dblclick", clickedSelect)
+    .text(d => d.data.name)
+    .style("font-size", "10px")
+    .style("text-anchor", "middle")
+    .style("fill", d => d.depth > 2 ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT)
+    .attr("fill-opacity", 1);
 
 const resetButton = svg.append("g")
     .attr("class", "reset-button")
@@ -218,6 +238,7 @@ resetButton.append("text")
 resetButton.on("click", function() {
     selectedItems.clear();
     updateColors();
+    document.getElementById('info-box').style.display = 'none';
 });
 
 function createShortCurvedArrow(startAngle, endAngle, clockwise) {
@@ -247,7 +268,7 @@ function createShortCurvedArrow(startAngle, endAngle, clockwise) {
     arrowGroup.append("path")
         .attr("d", arrowPath.toString())
         .attr("fill", "none")
-        .attr("stroke", "#4a90e2")
+        .attr("stroke", "#fff")
         .attr("stroke-width", 5)
         .attr("stroke-linejoin", "round")
         .attr("stroke-linecap", "round");
@@ -275,7 +296,7 @@ let rotationInterval;
 
 function startRotation(direction) {
     stopRotation();
-    rotationInterval = setInterval(() => rotateChart(direction), 50);
+    rotationInterval = setInterval(() => rotateChart(direction), 10);
 }
 
 function stopRotation() {
@@ -291,3 +312,9 @@ function rotateChart(direction) {
 d3.select("body").on("mouseup", stopRotation);
 
 d3.select("body").style("background-color", BACKGROUND_COLOR);
+
+document.addEventListener('click', function(event) {
+    if (!event.target.closest('#chart') && !event.target.closest('#info-box')) {
+        document.getElementById('info-box').style.display = 'none';
+    }
+});

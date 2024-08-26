@@ -3,19 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Campaign Configurator</title>
-    <link rel="stylesheet" href="cc.css">
+    <title>Interactive Ad Campaign Selector</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
-    <script src="https://d3js.org/d3-array.v3.min.js"></script>
-    <script src="https://d3js.org/d3-hierarchy.v2.min.js"></script>
-    <script src="https://d3js.org/d3-shape.v2.min.js"></script>
-    <script src="https://d3js.org/d3-transition.v2.min.js"></script>
+    <link rel="stylesheet" href="cc.css">
 </head>
 <body>
+    <div id="instructions" class="sidebar">
+        <h2>Instructions</h2>
+        <p>Welcome to the Ad Campaign Selector!</p>
+        <ul>
+            <li>Single-click on a tile to view information about it.</li>
+            <li>Double-click on a tile to select or deselect it.</li>
+            <li>Use the arrows to rotate the wheel.</li>
+            <li>Click the "Reset" button to clear all selections.</li>
+        </ul>
+    </div>
     <div id="chart"></div>
-
-    <script type="module" src="data.js"></script>
+    <div id="info-box" class="sidebar">
+        <h2 id="info-title"></h2>
+        <p id="info-content"></p>
+    </div>
     <script type="module" src="cc.js"></script>
 </body>
 </html>

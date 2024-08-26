@@ -9,11 +9,38 @@ body {
 }
 
 #chart {
-    width: 100%;
+    width: 70%;
     height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+.sidebar {
+    width: 15%;
+    height: 100vh;
+    padding: 20px;
+    box-sizing: border-box;
+    overflow-y: auto;
+    background-color: rgba(255, 255, 255, 0.9);
+    color: #333;
+}
+
+#instructions {
+    left: 0;
+}
+
+#info-box {
+    right: 0;
+    display: none;
+}
+
+h2 {
+    margin-top: 0;
+}
+
+ul {
+    padding-left: 20px;
 }
 
 #text {
