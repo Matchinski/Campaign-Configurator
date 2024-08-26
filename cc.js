@@ -51,12 +51,75 @@ function adjustedArc(d) {
         .startAngle(d.x0)
         .endAngle(d.x1)
         .innerRadius(d.y0)
-        .outerRadius(d.y1);
+        .outerRadius(d.data.isMerged ? d.parent.y1 : d.y1);
 
     return arcGenerator(d);
 }
 
 const selectedItems = new Set();
+
+function truncateText(text, maxLength) {
+    return text.length > maxLength ? text.slice(0, maxLength - 3) + '...' : text;
+}
+
+function getTileId(d) {
+    return `tile-${d.depth}-${Math.round(d.x0 * 1000)}-${Math.round(d.x1 * 1000)}-${Math.round(d.y0 * 1000)}-${Math.round(d.y1 * 1000)}`;
+}
+
+function expandTile(event, d) {
+    const tileId = getTileId(d);
+    const tile = d3.select(`#${tileId}`);
+    const label = d3.select(`#label-${tileId}`);
+
+    const expansionFactor = 1.2;
+    const arcGenerator = d3.arc()
+        .startAngle(d.x0)
+        .endAngle(d.x1)
+        .innerRadius(d.y0)
+        .outerRadius(d.y1 * expansionFactor);
+
+    tile.transition().duration(200)
+        .attr("d", arcGenerator);
+
+    label.transition().duration(200)
+        .attr("transform", function() {
+            const angle = (d.x0 + d.x1) / 2;
+            const radius = (d.y0 + d.y1 * expansionFactor) / 2;
+            const x = Math.sin(angle) * radius;
+            const y = -Math.cos(angle) * radius;
+            const rotation = (angle * 180 / Math.PI - 90) % 360;
+            return `translate(${x},${y}) rotate(${rotation})`;
+        })
+        .attr("text-anchor", "start")
+        .attr("dominant-baseline", "middle")
+        .style("font-size", "12px")
+        .text(d.data.name);
+}
+
+function contractTile(event, d) {
+    const tileId = getTileId(d);
+    const tile = d3.select(`#${tileId}`);
+    const label = d3.select(`#label-${tileId}`);
+
+    tile.transition().duration(200)
+        .attr("d", adjustedArc);
+
+    label.transition().duration(200)
+        .attr("transform", function() {
+            const angle = (d.x0 + d.x1) / 2;
+            const radius = (d.y0 + d.y1) / 2;
+            const x = Math.sin(angle) * radius;
+            const y = -Math.cos(angle) * radius;
+            const rotation = (angle * 180 / Math.PI - 90) % 360;
+            return `translate(${x},${y}) rotate(${rotation})`;
+        })
+        .attr("text-anchor", "middle")
+        .attr("dominant-baseline", "middle")
+        .style("font-size", "10px")
+        .text(function() {
+            return truncateText(d.data.name, 15);
+        });
+}
 
 function clickedInfo(event, p) {
     if (p.depth === 0) return;
@@ -70,7 +133,7 @@ function clickedInfo(event, p) {
 
     infoTitle.textContent = p.data.name;
     infoContent.textContent = `This is information about ${p.data.name}. It belongs to the ${p.parent.data.name} category.`;
-    
+
     infoBox.style.display = 'block';
     infoBox.style.backgroundColor = finalColor;
     infoBox.style.color = p.depth > 2 ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT;
@@ -110,8 +173,9 @@ function updateColors() {
         .attr("d", adjustedArc)
         .style("fill", d => {
             if (d.depth === 0) return BACKGROUND_COLOR;
+            if (d.data.isFake) return "none";
             const baseColor = color(d.ancestors().find(node => node.depth === 1).data.name);
-            let finalColor = getLighterShade(baseColor, d.depth - 1);
+            let finalColor = getLighterShade(baseColor, (d.data.isMerged ? d.parent.depth : d.depth) - 1);
 
             if (selectedItems.has(d) || (d.parent && d.parent.children.some(c => selectedItems.has(c) && c.data.isFake))) {
                 finalColor = getHighlightShade(finalColor);
@@ -154,71 +218,74 @@ function updateColors() {
 
     chartGroup.selectAll("text")
         .attr("transform", function(d) {
-            const x0 = d.x0;
-            const x1 = d.x1;
-
-            const isMerged = d.data.isFake || (d.parent && d.parent.children.some(c => c.data.isFake));
-            if (isMerged) {
-                const mergedX0 = d.parent.x0;
-                const mergedX1 = d.parent.x1;
-                const x = (mergedX0 + mergedX1) / 2 * 180 / Math.PI;
-                const y = (d.y0 + d.y1) / 2;
-                return `rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180})`;
-            } else {
-                const x = (x0 + x1) / 2 * 180 / Math.PI;
-                const y = (d.y0 + d.y1) / 2;
-                return `rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180})`;
-            }
+            const angle = (d.x0 + d.x1) / 2;
+            const radius = (d.y0 + d.y1) / 2;
+            const x = Math.sin(angle) * radius;
+            const y = -Math.cos(angle) * radius;
+            const rotation = (angle * 180 / Math.PI - 90);
+            return `translate(${x},${y}) rotate(${rotation})`;
         })
+        .attr("text-anchor", "middle")
+        .attr("alignment-baseline", "middle")
         .style("fill", d => d.depth > 2 || selectedItems.has(d) ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
 }
 
-chartGroup.selectAll("path")
-    .data(root.descendants())
-    .enter()
-    .append("path")
-    .attr("class", "segment")
-    .attr("d", adjustedArc)
-    .style("fill", d => {
-        if (d.depth === 0) return BACKGROUND_COLOR;
-        const baseColor = color(d.ancestors().find(node => node.depth === 1).data.name);
-        return getLighterShade(baseColor, d.depth - 1);
-    })
-    .style("stroke", d => d.data.isFake ? "none" : NORMAL_BORDER_COLOR)
-    .style("stroke-width", d => d.data.isFake ? 0 : BORDER_WIDTH)
-    .on("click", clickedInfo)
-    .on("dblclick", clickedSelect)
-    .append("title")
-    .text(d => d.data.isFake ? "" : `${d.ancestors().map(d => d.data.name).reverse().join("/")}\n${d.value}`);
+function drawChart() {
+    chartGroup.selectAll("path")
+        .data(root.descendants())
+        .enter()
+        .append("path")
+        .attr("class", "segment")
+        .attr("id", d => getTileId(d))
+        .attr("d", d => {
+            if (d.data.isMerged) {
+                return adjustedArc({...d, y1: d.parent.y1});
+            }
+            return adjustedArc(d);
+        })
+        .style("fill", d => {
+            if (d.depth === 0) return BACKGROUND_COLOR;
+            const baseColor = color(d.ancestors().find(node => node.depth === 1).data.name);
+            const effectiveDepth = d.data.isMerged ? d.parent.depth : d.depth;
+            return getLighterShade(baseColor, effectiveDepth - 1);
+        })
+        .style("stroke", d => d.data.isFake ? "none" : NORMAL_BORDER_COLOR)
+        .style("stroke-width", d => d.data.isFake ? 0 : BORDER_WIDTH)
+        .on("click", clickedInfo)
+        .on("dblclick", clickedSelect)
+        .on("mouseover", function(event, d) {
+            if (d.depth === 3 || d.data.isMerged) {
+                expandTile(event, d);
+            }
+        })
+        .on("mouseout", function(event, d) {
+            if (d.depth === 3 || d.data.isMerged) {
+                contractTile(event, d);
+            }
+        });
 
-const label = chartGroup.selectAll("text")
-    .data(root.descendants().filter(d => d.depth && d.data.name !== ""))
-    .enter().append("text")
-    .attr("transform", function(d) {
-        const x0 = d.x0;
-        const x1 = d.x1;
-
-        const isMerged = d.data.isFake || (d.parent && d.parent.children.some(c => c.data.isFake));
-        if (isMerged) {
-            const mergedX0 = d.parent.x0;
-            const mergedX1 = d.parent.x1;
-            const x = (mergedX0 + mergedX1) / 2 * 180 / Math.PI;
-            const y = (d.y0 + d.y1) / 2;
-            return `rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180})`;
-        } else {
-            const x = (x0 + x1) / 2 * 180 / Math.PI;
-            const y = (d.y0 + d.y1) / 2;
-            return `rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180})`;
-        }
-    })
-    .attr("dy", "0.35em")
-    .on("click", clickedInfo)
-    .on("dblclick", clickedSelect)
-    .text(d => d.data.name)
-    .style("font-size", "10px")
-    .style("text-anchor", "middle")
-    .style("fill", d => d.depth > 2 ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT)
-    .attr("fill-opacity", 1);
+    chartGroup.selectAll("text")
+        .data(root.descendants().filter(d => d.depth && d.data.name !== "" && !d.data.isFake))
+        .enter().append("text")
+        .attr("class", "node-label")
+        .attr("id", d => `label-${getTileId(d)}`)
+        .attr("transform", function(d) {
+            const angle = (d.x0 + d.x1) / 2;
+            const radius = (d.y0 + d.y1) / 2;
+            const x = Math.sin(angle) * radius;
+            const y = -Math.cos(angle) * radius;
+            const rotation = (angle * 180 / Math.PI - 90);
+            return `translate(${x},${y}) rotate(${rotation})`;
+        })
+        .attr("text-anchor", "middle")
+        .attr("alignment-baseline", "middle")
+        .style("font-size", "10px")
+        .style("fill", d => d.depth > 2 ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT)
+        .style("pointer-events", "none")
+        .text(function(d) {
+            return truncateText(d.data.name, 15);
+        });
+}
 
 const resetButton = svg.append("g")
     .attr("class", "reset-button")
@@ -238,7 +305,14 @@ resetButton.append("text")
 resetButton.on("click", function() {
     selectedItems.clear();
     updateColors();
-    document.getElementById('info-box').style.display = 'none';
+    showDefaultInfoPanel();
+    
+    // Reset the rotation of the chart
+    chartGroup.attr("data-rotation", 0).attr("transform", "rotate(0)");
+    
+    // Redraw the entire chart to fix any issues with merged tiles
+    chartGroup.selectAll("*").remove();
+    drawChart();
 });
 
 function createShortCurvedArrow(startAngle, endAngle, clockwise) {
@@ -313,8 +387,27 @@ d3.select("body").on("mouseup", stopRotation);
 
 d3.select("body").style("background-color", BACKGROUND_COLOR);
 
+function showDefaultInfoPanel() {
+    const infoBox = document.getElementById('info-box');
+    const infoTitle = document.getElementById('info-title');
+    const infoContent = document.getElementById('info-content');
+
+    infoTitle.textContent = "Ad Campaign Selector";
+    infoContent.textContent = "Click on any tile to see info about it.";
+
+    infoBox.style.display = 'block';
+    infoBox.style.backgroundColor = "#4CAF50";
+    infoBox.style.color = TEXT_COLOR_LIGHT;
+}
+
+// Show default info panel on page load
+showDefaultInfoPanel();
+
+// Initial chart drawing
+drawChart();
+
 document.addEventListener('click', function(event) {
     if (!event.target.closest('#chart') && !event.target.closest('#info-box')) {
-        document.getElementById('info-box').style.display = 'none';
+        showDefaultInfoPanel();
     }
 });

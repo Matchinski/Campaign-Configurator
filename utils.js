@@ -48,7 +48,7 @@ export function areIncompatible(item1, item2) {
 
 export function addFakeChildren(node) {
     node.children.forEach(child => {
-        if (child.children && child.children.length === 1) {
+        if (child.children && child.children.length === 1 && !child.children.some(c => c.isFake)) {
             child.children.push({ name: "", value: child.children[0].value, isFake: true });
         }
         if (child.children) {

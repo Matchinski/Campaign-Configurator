@@ -32,7 +32,7 @@ const chartData = {
                     ]
                 },
                 {
-                    name: "Out of Home (OOH)",
+                    name: "Out of Home",
                     children: [
                         { name: "InStadium", value: 1 },
                         { name: "Video", value: 1 },

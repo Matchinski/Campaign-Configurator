@@ -5,7 +5,7 @@ body {
     align-items: center;
     height: 100vh;
     margin: 0;
-    background-color: #aaa;
+    background-color: #001F3F;  /* Dark blue background */
 }
 
 #chart {
@@ -43,6 +43,25 @@ ul {
     padding-left: 20px;
 }
 
+.node-label {
+    pointer-events: none;
+    text-anchor: middle;
+    dominant-baseline: middle;
+    font-size: 10px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 150px;  
+}
+
+.segment {
+    transition: all 0.2s;
+}
+
+.segment:hover {
+    filter: brightness(1.1);
+}
+
 #text {
     font-family: Arial, sans-serif;
     font-size: 10px;
@@ -64,6 +83,14 @@ ul {
     fill: #f44336;
 }
 
-.node-label {
-    pointer-events: none;
+.arrow {
+    cursor: pointer;
+}
+
+.arrow path {
+    fill: none;
+    stroke: #fff;
+    stroke-width: 5;
+    stroke-linejoin: round;
+    stroke-linecap: round;
 }
