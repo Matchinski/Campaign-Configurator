@@ -35,7 +35,7 @@ const partition = data => {
   const root = d3.hierarchy(data)
     .sum(d => d.value)
     .sort((a, b) => b.value - a.value);
-  
+
   return d3.partition()
     .size([2 * Math.PI, radius * 0.85])
     .padding(0)(root);
@@ -54,60 +54,62 @@ function arc(d) {
 
 const selectedItems = new Set();
 
+const EXPANSION_FACTOR = 1.2;
+
 function expandTile(event, d) {
     if (d.children) return;
-  
+
     const tileId = getTileId(d);
     const tile = d3.select(`#${tileId}`);
     const label = d3.select(`#label-${tileId}`);
-  
-    const expansionFactor = 1.2;
+
     const arcGenerator = d3.arc()
-      .startAngle(d.x0)
-      .endAngle(d.x1)
-      .innerRadius(d.y0)
-      .outerRadius(d.y1 * expansionFactor);
-  
+        .startAngle(d.x0)
+        .endAngle(d.x1)
+        .innerRadius(d.y0)
+        .outerRadius(d.y1 * EXPANSION_FACTOR);
+
     tile.transition().duration(200)
-      .attr("d", arcGenerator);
-  
+        .attr("d", arcGenerator);
+
     label.transition().duration(200)
-      .attr("transform", function() {
-        const angle = (d.x0 + d.x1) / 2;
-        const radius = (d.y0 + d.y1 * expansionFactor) / 2;
-        const x = Math.sin(angle) * radius;
-        const y = -Math.cos(angle) * radius;
-        const rotation = (angle * 180 / Math.PI - 90);
-        return `translate(${x},${y}) rotate(${rotation})`;
-      })
-      .style("font-size", "12px")
-      .text(d.data.name);
-  }
-  
-  function contractTile(event, d) {
+        .attr("transform", function() {
+            const angle = (d.x0 + d.x1) / 2;
+            const radius = (d.y0 + d.y1 * EXPANSION_FACTOR) / 2;
+            const x = Math.sin(angle) * radius;
+            const y = -Math.cos(angle) * radius;
+            const rotation = (angle * 180 / Math.PI - 90);
+            return `translate(${x},${y}) rotate(${rotation})`;
+        })
+        .style("font-size", "12px")
+        .text(d.data.name);
+}
+
+function contractTile(event, d) {
     if (d.children) return;
-  
+
     const tileId = getTileId(d);
     const tile = d3.select(`#${tileId}`);
     const label = d3.select(`#label-${tileId}`);
-  
+
     tile.transition().duration(200)
-      .attr("d", arc);
-  
+        .attr("d", arc);
+
     label.transition().duration(200)
-      .attr("transform", function() {
-        const angle = (d.x0 + d.x1) / 2;
-        const radius = (d.y0 + d.y1) / 2;
-        const x = Math.sin(angle) * radius;
-        const y = -Math.cos(angle) * radius;
-        const rotation = (angle * 180 / Math.PI - 90);
-        return `translate(${x},${y}) rotate(${rotation})`;
-      })
-      .style("font-size", "9px")
-      .text(d => truncateText(d.data.name, 17));
-  }
+        .attr("transform", function() {
+            const angle = (d.x0 + d.x1) / 2;
+            const radius = (d.y0 + d.y1) / 2;
+            const x = Math.sin(angle) * radius;
+            const y = -Math.cos(angle) * radius;
+            const rotation = (angle * 180 / Math.PI - 90);
+            return `translate(${x},${y}) rotate(${rotation})`;
+        })
+        .style("font-size", "10px")
+        .text(d => truncateText(d.data.name, 15));
+}
 
 function clickedInfo(event, p) {
+    event.preventDefault();
     if (p.depth === 0) return;
 
     const baseColor = color(p.ancestors().reverse()[1].data.name);
@@ -126,16 +128,20 @@ function clickedInfo(event, p) {
 }
 
 function clickedSelect(event, p) {
+    event.preventDefault();
+    event.stopPropagation();
     if (p.depth === 0) return;
 
-    if (selectedItems.has(p)) {
+    const isSelected = selectedItems.has(p);
+    
+    if (isSelected) {
         selectedItems.delete(p);
     } else {
-        for (let item of selectedItems) {
+        selectedItems.forEach(item => {
             if (areIncompatible(item.data.name, p.data.name)) {
                 selectedItems.delete(item);
             }
-        }
+        });
         selectedItems.add(p);
     }
 
@@ -144,9 +150,6 @@ function clickedSelect(event, p) {
 
 function updateColors() {
     chartGroup.selectAll("path.segment")
-        .transition()
-        .duration(300)
-        .attr("d", arc)
         .style("fill", d => {
             if (d.depth === 0) return BACKGROUND_COLOR;
             const baseColor = color(d.ancestors().reverse()[1].data.name);
@@ -160,29 +163,16 @@ function updateColors() {
 
             return finalColor;
         })
-        .style("stroke", d => selectedItems.has(d) ? SELECTED_BORDER_COLOR : NORMAL_BORDER_COLOR)
-        .style("stroke-width", BORDER_WIDTH);
+        .each(function(d) {
+            const isSelected = selectedItems.has(d);
+            d3.select(this)
+                .style("stroke", isSelected ? SELECTED_BORDER_COLOR : NORMAL_BORDER_COLOR)
+                .style("stroke-width", isSelected ? BORDER_WIDTH * 2 : BORDER_WIDTH)
+                .style("stroke-linejoin", "round")
+                .style("stroke-linecap", "round");
+        });
 
-    chartGroup.selectAll("path.outline").remove();
-
-    selectedItems.forEach(d => {
-        chartGroup.append("path")
-            .attr("d", arc(d))
-            .attr("class", "outline")
-            .style("fill", "none")
-            .style("stroke", SELECTED_BORDER_COLOR)
-            .style("stroke-width", BORDER_WIDTH);
-    });
-
-    chartGroup.selectAll("text")
-        .attr("transform", function(d) {
-            const angle = (d.x0 + d.x1) / 2;
-            const radius = (d.y0 + d.y1) / 2;
-            const x = Math.sin(angle) * radius;
-            const y = -Math.cos(angle) * radius;
-            const rotation = (angle * 180 / Math.PI - 90);
-            return `translate(${x},${y}) rotate(${rotation})`;
-        })
+    chartGroup.selectAll("text.node-label")
         .style("fill", d => d.depth > 2 || selectedItems.has(d) ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT);
 }
 
@@ -200,6 +190,8 @@ function drawChart() {
         })
         .style("stroke", NORMAL_BORDER_COLOR)
         .style("stroke-width", BORDER_WIDTH)
+        .style("stroke-linejoin", "round")
+        .style("stroke-linecap", "round")
         .on("click", clickedInfo)
         .on("dblclick", clickedSelect)
         .on("mouseover", expandTile)
@@ -241,7 +233,8 @@ resetButton.append("text")
     .style("font-size", "12px")
     .text("Reset");
 
-resetButton.on("click", function() {
+resetButton.on("click", function(event) {
+    event.preventDefault();
     selectedItems.clear();
     updateColors();
     showDefaultInfoPanel();
@@ -310,3 +303,9 @@ document.addEventListener('click', function(event) {
         showDefaultInfoPanel();
     }
 });
+
+document.addEventListener('mousedown', function(event) {
+    if (event.detail > 1) {
+        event.preventDefault();
+    }
+}, false);
