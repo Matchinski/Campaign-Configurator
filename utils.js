@@ -46,29 +46,48 @@ export function areIncompatible(item1, item2) {
     );
 }
 
-export function addFakeChildren(node) {
-    node.children.forEach(child => {
-        if (child.children && child.children.length === 1 && !child.children.some(c => c.isFake)) {
-            child.children.push({ name: "", value: child.children[0].value, isFake: true });
-        }
-        if (child.children) {
-            addFakeChildren(child);
-        }
-    });
+export function truncateText(text, maxLength) {
+    return text.length > maxLength ? text.slice(0, maxLength - 3) + '...' : text;
 }
 
-export function createMergedOutlinePath(d, adjustedArc) {
-    const parent = d.parent;
-    if (parent && parent.children.some(c => c.data.isFake)) {
-        const mergedX0 = parent.x0;
-        const mergedX1 = parent.x1;
-        const arcGenerator = d3.arc()
-            .startAngle(mergedX0)
-            .endAngle(mergedX1)
-            .innerRadius(d.y0)
-            .outerRadius(d.y1);
-        return arcGenerator(d);
-    } else {
-        return adjustedArc(d);
-    }
+export function getTileId(d) {
+    return `tile-${d.depth}-${Math.round(d.x0 * 1000)}-${Math.round(d.x1 * 1000)}-${Math.round(d.y0 * 1000)}-${Math.round(d.y1 * 1000)}`;
+}
+
+export function createShortCurvedArrow(startAngle, endAngle, clockwise, arrowRadius) {
+    const arrowPath = d3.path();
+    const arrowSize = 10;
+    const arrowAngle = 0.1;
+
+    arrowPath.arc(0, 0, arrowRadius, startAngle, endAngle, !clockwise);
+
+    const endX = Math.cos(endAngle) * arrowRadius;
+    const endY = Math.sin(endAngle) * arrowRadius;
+
+    const tipAngle1 = clockwise ? endAngle - arrowAngle : endAngle + arrowAngle;
+    const tip1X = Math.cos(tipAngle1) * (arrowRadius - arrowSize);
+    const tip1Y = Math.sin(tipAngle1) * (arrowRadius - arrowSize);
+
+    const tipAngle2 = clockwise ? endAngle - arrowAngle : endAngle + arrowAngle;
+    const tip2X = Math.cos(tipAngle2) * (arrowRadius + arrowSize);
+    const tip2Y = Math.sin(tipAngle2) * (arrowRadius + arrowSize);
+
+    arrowPath.lineTo(tip1X, tip1Y);
+    arrowPath.lineTo(endX, endY);
+    arrowPath.lineTo(tip2X, tip2Y);
+
+    return arrowPath.toString();
+}
+
+export function showDefaultInfoPanel() {
+    const infoBox = document.getElementById('info-box');
+    const infoTitle = document.getElementById('info-title');
+    const infoContent = document.getElementById('info-content');
+
+    infoTitle.textContent = "Ad Campaign Selector";
+    infoContent.textContent = "Click on any tile to see info about it.";
+
+    infoBox.style.display = 'block';
+    infoBox.style.backgroundColor = "#4CAF50";
+    infoBox.style.color = TEXT_COLOR_LIGHT;
 }
