@@ -20,7 +20,7 @@ const height = 1000;
 const chartWidth = 800;
 const chartHeight = 800;
 const radius = Math.min(chartWidth, chartHeight) / 2;
-const arrowRadius = radius + 10;
+const arrowRadius = radius * 1.05; 
 
 const svg = d3.select("#chart")
     .append("svg")
@@ -109,7 +109,6 @@ function contractTile(event, d) {
 }
 
 function clickedInfo(event, p) {
-    event.preventDefault();
     if (p.depth === 0) return;
 
     const baseColor = color(p.ancestors().reverse()[1].data.name);
@@ -125,6 +124,17 @@ function clickedInfo(event, p) {
     infoBox.style.display = 'block';
     infoBox.style.backgroundColor = finalColor;
     infoBox.style.color = p.depth > 2 ? TEXT_COLOR_DARK : TEXT_COLOR_LIGHT;
+
+    // Toggle expansion
+    const tileId = getTileId(p);
+    const tile = d3.select(`#${tileId}`);
+    if (tile.classed("expanded")) {
+        contractTile(event, p);
+        tile.classed("expanded", false);
+    } else {
+        expandTile(event, p);
+        tile.classed("expanded", true);
+    }
 }
 
 function clickedSelect(event, p) {
@@ -132,8 +142,12 @@ function clickedSelect(event, p) {
     event.stopPropagation();
     if (p.depth === 0) return;
 
+    toggleSelection(p);
+}
+
+function toggleSelection(p) {
     const isSelected = selectedItems.has(p);
-    
+
     if (isSelected) {
         selectedItems.delete(p);
     } else {
@@ -146,6 +160,16 @@ function clickedSelect(event, p) {
     }
 
     updateColors();
+    updateSearchResults();
+
+    // Update info box
+    clickedInfo(null, p);
+
+    // Center the selected tile
+    const angle = (p.x0 + p.x1) / 2 * 180 / Math.PI - 90;
+    chartGroup.transition()
+        .duration(750)
+        .attr("transform", `rotate(${-angle})`);
 }
 
 function updateColors() {
@@ -243,6 +267,7 @@ resetButton.on("click", function(event) {
 
     chartGroup.selectAll("*").remove();
     drawChart();
+    updateSearchResults();
 });
 
 function addArrow(centerAngle, arcLength, clockwise) {
@@ -309,3 +334,85 @@ document.addEventListener('mousedown', function(event) {
         event.preventDefault();
     }
 }, false);
+
+function searchTiles(searchTerm) {
+    const normalizedSearchTerm = searchTerm.toLowerCase().trim();
+    const searchResults = [];
+    
+    if (normalizedSearchTerm === '') {
+        displaySearchResults([]); 
+        return;
+    }
+    
+    chartGroup.selectAll("path.segment")
+        .classed("highlighted", false)
+        .each(function(d) {
+            const tileName = d.data.name.toLowerCase();
+            if (tileName.includes(normalizedSearchTerm)) {
+                d3.select(this).classed("highlighted", true);
+                searchResults.push(d);
+            }
+        });
+    
+    displaySearchResults(searchResults);
+}
+
+function displaySearchResults(results) {
+    const searchResultsContainer = document.getElementById('search-results');
+    searchResultsContainer.innerHTML = '';
+
+    if (results.length === 0 && document.getElementById('search-input').value.trim() !== '') {
+        searchResultsContainer.innerHTML = '<p>No results found.</p>';
+        return;
+    }
+
+    if (results.length > 0) {
+        const resultsList = document.createElement('ul');
+        results.forEach(result => {
+            const listItem = document.createElement('li');
+            listItem.textContent = result.data.name;
+            listItem.classList.add('search-result');
+            if (selectedItems.has(result)) {
+                listItem.classList.add('selected');
+            }
+            listItem.addEventListener('click', () => focusOnTile(result));
+            listItem.addEventListener('dblclick', (event) => {
+                event.preventDefault();
+                toggleSelection(result);
+            });
+            resultsList.appendChild(listItem);
+        });
+
+        searchResultsContainer.appendChild(resultsList);
+    }
+}
+
+function focusOnTile(d) {
+    chartGroup.selectAll("path.segment")
+        .classed("highlighted", false);
+    
+    const tileId = getTileId(d);
+    const tile = d3.select(`#${tileId}`);
+    tile.classed("highlighted", true);
+
+    expandTile(null, d);
+
+    clickedInfo(null, d);
+
+    const angle = (d.x0 + d.x1) / 2 * 180 / Math.PI - 90;
+    chartGroup.transition()
+        .duration(750)
+        .attr("transform", `rotate(${-angle})`);
+}
+
+function updateSearchResults() {
+    const searchInput = document.getElementById('search-input');
+    searchTiles(searchInput.value);
+}
+
+const searchInput = document.getElementById('search-input');
+searchInput.addEventListener('input', function() {
+    searchTiles(this.value);
+});
+
+updateSearchResults();

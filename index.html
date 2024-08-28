@@ -3,26 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Ad Campaign Selector</title>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <title>Ad Campaign Selector</title>
     <link rel="stylesheet" href="cc.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
     <div id="instructions" class="sidebar">
-        <h2>Instructions</h2>
-        <p>Welcome to the Ad Campaign Selector!</p>
-        <ul>
+        <h2 class="centered-title">Instructions</h2>
+        <ul class="dash-list">
             <li>Single-click on a tile to view information about it.</li>
             <li>Double-click on a tile to select or deselect it.</li>
             <li>Use the arrows to rotate the wheel.</li>
             <li>Click the "Reset" button to clear all selections.</li>
+            <li>Use the search bar to find specific tiles.</li>
         </ul>
+        <div id="search-container">
+            <h3>Search</h3>
+            <input type="text" id="search-input" placeholder="Search tiles...">
+            <div id="search-results"></div>
+        </div>
     </div>
+
     <div id="chart"></div>
+
     <div id="info-box" class="sidebar">
         <h2 id="info-title"></h2>
-        <p id="info-content"></p>
+        <div id="info-content"></div>
     </div>
+
     <script type="module" src="cc.js"></script>
 </body>
 </html>
