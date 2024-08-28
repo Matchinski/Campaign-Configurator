@@ -19,20 +19,27 @@ export function getHighlightShade(color) {
 export const incompatiblePairs = [
     ['Reach', 'Interactive video'],
     ['Reach', 'TrueX Engagement'],
-    ['Reach', 'Open Web'],
+    ['Reach', 'IDV'],
+    ['Reach', 'IDVx'],
     ['Reach', 'XtendedView'],
     ['Unique views', 'Interactive video'],
     ['Unique views', 'TrueX Engagement'],
-    ['Unique views', 'Open Web'],
+    ['Unique views', 'IDV'],
+    ['Unique views', 'IDVx'],
     ['Unique views', 'XtendedView'],
     ['Impressions', 'Interactive video'],
     ['Impressions', 'TrueX Engagement'],
-    ['Impressions', 'Open Web'],
+    ['Impressions', 'IDV'],
+    ['Impressions', 'IDVx'],
     ['Impressions', 'XtendedView'],
     ['Frequency', 'Interactive video'],
     ['Frequency', 'TrueX Engagement'],
-    ['Frequency', 'Open Web'],
-    ['Frequency', 'XtendedView']
+    ['Frequency', 'IDV'],
+    ['Frequency', 'IDVx'],
+    ['Frequency', 'XtendedView'],
+    ['CTR', 'NeXt Performance'],
+    ['VCR', 'NeXt Performance'],
+    ['Attention', 'NeXt Performance']
 ];
 
 export function areIncompatible(item1, item2) {
