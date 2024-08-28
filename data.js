@@ -5,7 +5,7 @@ const chartData = {
             name: "Product",
             children: [
                 {
-                    name: "NeXt Performance Media",
+                    name: "NeXt Performance",
                     children: [
                         { name: "Display Banner", value: 1 },
                         { name: "Display Interstitial", value: 1 },
@@ -26,7 +26,8 @@ const chartData = {
                 {
                     name: "Interactive video",
                     children: [
-                        { name: "Open Web", value: 1 },
+                        { name: "IDV", value: 1 },
+                        { name: "IDVx", value: 1 },
                         { name: "TrueX Engagement", value: 1 },
                         { name: "XtendedView", value: 1 }
                     ]
