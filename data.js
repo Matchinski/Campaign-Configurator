@@ -5,10 +5,10 @@ const chartData = {
             name: "Product",
             children: [
                 {
-                    name: "Display",
+                    name: "NeXt Performance Media",
                     children: [
-                        { name: "Banner", value: 1 },
-                        { name: "Interstitial", value: 1 },
+                        { name: "Display Banner", value: 1 },
+                        { name: "Display Interstitial", value: 1 },
                         { name: "Rich Media", value: 1 },
                         { name: "Video", value: 1 },
                         { name: "Audio", value: 1 },
@@ -27,7 +27,7 @@ const chartData = {
                     name: "Interactive video",
                     children: [
                         { name: "Open Web", value: 1 },
-                        { name: "Guaranteed engagement", value: 1 },
+                        { name: "TrueX Engagement", value: 1 },
                         { name: "XtendedView", value: 1 }
                     ]
                 },
@@ -59,7 +59,7 @@ const chartData = {
                 {
                     name: "Supply type",
                     children: [
-                        { name: "Direct integration", value: 1 },
+                        { name: "Opt-in", value: 1 },
                         { name: "Programmatic", value: 1 }
                     ]
                 },
@@ -101,7 +101,9 @@ const chartData = {
                         { name: "CPC", value: 1 },
                         { name: "CPM", value: 1 },
                         { name: "ROAS", value: 1 },
-                        { name: "CPA", value: 1 }
+                        { name: "CPA", value: 1 },
+                        { name: "CPCV", value: 1 },
+                        { name: "CPSV", value: 1 }
                     ]
                 },
                 {
@@ -170,14 +172,15 @@ const chartData = {
                 {
                     name: "Audiences",
                     children: [
-                        { name: "1P Location", value: 1 },
-                        { name: "1P Segment Survey", value: 1 },
-                        { name: "1P Pre-Qualified", value: 1 },
+                        { name: "0P Segment Survey", value: 1 },
+                        { name: "0P Pre-Qualified", value: 1 },
                         { name: "1P Geo/Demo", value: 1 },
+                        { name: "1P Location", value: 1 },
                         { name: "3P Geo/Demo", value: 1 },
                         { name: "3P Interest-based", value: 1 },
                         { name: "3P Behavioral", value: 1 },
-                        { name: "Contextual", value: 1 }
+                        { name: "Contextual", value: 1 },
+                        { name: "Client Segments", value: 1 }
                     ]
                 },
                 {
@@ -238,6 +241,7 @@ const chartData = {
                         { name: "Branching", value: 1 },
                         { name: "Choose Your Own Adventure", value: 1 },
                         { name: "Game", value: 1 },
+                        { name: "Quiz", value: 1 },
                         { name: "2-Screen CTV Experience", value: 1 }
                     ]
                 },

@@ -17,27 +17,22 @@ export function getHighlightShade(color) {
 }
 
 export const incompatiblePairs = [
-    ['Banner', 'Interstitial'],
-    ['Facebook', 'Instagram'],
-    ['Desktop', 'Mobile web'],
-    ['CTR', 'VCR'],
-    ['Arrival', 'ELAR'],
-    ['1P Location', '3P Geo/Demo'],
-    ['Video', 'Audio'],
-    ['CTV', 'Digital OOH'],
-    ['Open Web', 'Guaranteed engagement'],
-    ['InStadium', 'Display'],
-    ['Desktop', 'Mobile in-app'],
-    ['Direct integration', 'Programmatic'],
-    ['Unique views', 'Frequency'],
-    ['CTR', 'Attention'],
-    ['CPC', 'CPM'],
-    ['Conversions', 'Location visits'],
-    ['Arrival', 'OOH Exposure'],
-    ['Ad relevance', 'Engagement metrics'],
-    ['Sales lift', 'Brand lift'],
-    ['Viewability', 'Fraud'],
-    ['Creative', 'Objectives'],
+    ['Reach', 'Interactive video'],
+    ['Reach', 'TrueX Engagement'],
+    ['Reach', 'Open Web'],
+    ['Reach', 'XtendedView'],
+    ['Unique views', 'Interactive video'],
+    ['Unique views', 'TrueX Engagement'],
+    ['Unique views', 'Open Web'],
+    ['Unique views', 'XtendedView'],
+    ['Impressions', 'Interactive video'],
+    ['Impressions', 'TrueX Engagement'],
+    ['Impressions', 'Open Web'],
+    ['Impressions', 'XtendedView'],
+    ['Frequency', 'Interactive video'],
+    ['Frequency', 'TrueX Engagement'],
+    ['Frequency', 'Open Web'],
+    ['Frequency', 'XtendedView']
 ];
 
 export function areIncompatible(item1, item2) {
